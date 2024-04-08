@@ -11,4 +11,5 @@ echo "Protein Protein_CAL_Other" | srun --mpi=pmix gmx_mpi trjconv -f cluster.xt
 # create first snapshot for VMD
 echo "Protein_CAL_Other " | srun --mpi=pmix gmx_mpi trjconv -f cluster.xtc -s 75ns.tpr -o dry.gro -dump 0 -n dry.ndx &>> post_proc.log
 
+# clean up a bit
 rm cluster.xtc
