@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# run the simulation
 srun --mpi=pmix gmx_mpi mdrun -deffnm md -v -ntomp $SLURM_CPUS_PER_TASK >& md.out
 
 # extract trajectories
