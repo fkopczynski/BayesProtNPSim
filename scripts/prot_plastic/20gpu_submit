@@ -1,0 +1,81 @@
+#!/bin/bash
+#SBATCH --job-name=equil
+#SBATCH --output=md_%j.log     
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --partition=gpuGTX
+#SBATCH --exclude=compute-21-1,compute-18-1,compute-17-1,compute-20-1
+#SBATCH --gpus-per-node=1
+
+export TMPDIR=/state/partition1
+source /home/spack-user/spack/share/spack/setup-env.sh
+spack load gromacs/z7lm
+
+#spack load gromacs@2020.4/5et # gtx2080 (compute 21-1,    CPUs 12, gpuGTX)
+#spack load gromacs@2020.4/fve # gtx980  (compute-16-4,    CPUs 8,  gpuGTX)
+#spack load gromacs@2020.4/7hl # titan   (compute-17,18-1, CPUs 8,  gpuGTX)
+#spack load gromacs@2020.4/y2h # gtx1080 (compute-20-1,    CPUs 12, gpuGTX) 
+#spack load gromacs@2021.3/qws # rtx3090 (compute 22-0,    CPUs 32, gpuRTX)
+#spack load gromacs@2020.4/rsk # rtx3090 (compute-15-0,    CPUs 32, gpuRTX)
+### (compute-24-1, CPUs 32, gpu:rtx4080, gpuRTX)
+
+echo "SLURM_JOBID=$SLURM_JOBID"
+echo "SLURM_JOB_NODELIST=$SLURM_JOB_NODELIST"
+echo "SLURM_NNODES=$SLURM_NNODES "
+echo "working directory= $SLURM_SUBMIT_DIR "
+echo "tmp directory=$TMPDIR"
+echo "NPROCS=$SLURM_NPROCS"
+echo "Number of CPUs per task=$SLURM_CPUS_PER_TASK"
+echo "Count of processors avaiable to the job on this node=$SLURM_JOB_CPUS_PER_NODE"
+echo "Number of CPUs requested per allocated GPU=$SLURM_CPUS_PER_GPU"
+echo "Number of GPUs requested=$SLURM_GPUS"
+echo "Number of tasks=$SLURM_NTASKS"
+
+# no coredumps
+ulimit -S -c 0
+ulimit -s unlimited
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+mkdir -p $TMPDIR/$USER/$SLURM_JOBID
+cp -rf $SLURM_SUBMIT_DIR/* $TMPDIR/$USER/$SLURM_JOBID
+cd $TMPDIR/$USER/$SLURM_JOBID
+
+srun --mpi=pmix gmx_mpi mdrun -deffnm md >& md.out
+
+# convert trajectory to remove PBC, rotations and translations
+start=$(date)
+echo -e '"Protein" | 13 | "Other" \nq ' | srun --mpi=pmix gmx_mpi make_ndx -f md.tpr -o dry.ndx &> post_proc.log
+echo "Protein_CAL_Other Protein System" | srun --mpi=pmix gmx_mpi trjconv -f md.xtc -s md.tpr -dt 100 -pbc cluster -center -o cluster.xtc -n dry.ndx &>> post_proc.log
+echo "Protein Protein_CAL_Other" | srun --mpi=pmix gmx_mpi trjconv -f cluster.xtc -n dry.ndx -s md.tpr -o dry.xtc -fit rot+trans &>> post_proc.log
+
+# create first snapshot for VMD
+echo "Protein_CAL_Other " | srun --mpi=pmix gmx_mpi trjconv -f cluster.xtc -s md.tpr -o dry.gro -dump 0 -n dry.ndx &>> post_proc.log
+
+# calculate RMSD and RMSF
+echo -e '3\n3' | srun --mpi=pmix gmx_mpi rms -f cluster.xtc -s md.tpr -o rmsd_prot.xvg -xvg none &>> post_proc.log
+echo -e 'Other\nOther' | srun --mpi=pmix gmx_mpi rms -f cluster.xtc -s md.tpr -o rmsd_pl.xvg -xvg none &>> post_proc.log
+echo 'Protein' | srun --mpi=pmix gmx_mpi rmsf -f cluster.xtc -s md.tpr -o rmsf_prot.xvg -xvg none &>> post_proc.log
+echo 'Other' | srun --mpi=pmix gmx_mpi rmsf -f md.xtc -s md.tpr -o rmsf_pl.xvg -xvg none &>> post_proc.log
+
+# calculate radius of gyration
+echo -e 'Protein\n' | srun --mpi=pmix gmx_mpi gyrate -f cluster.xtc -s md.tpr -o gyr.xvg -xvg none &>> post_proc.log
+
+# calculate p, T, pe, ke
+echo 'Pressure' | srun --mpi=pmix gmx_mpi energy -f md.edr -o pres.xvg -xvg none &>> post_proc.log
+echo 'Temperature' | srun --mpi=pmix gmx_mpi energy -f md.edr -o temp.xvg -xvg none &>> post_proc.log
+echo 'Potential' | srun --mpi=pmix gmx_mpi energy -f md.edr -o pe.xvg -xvg none &>> post_proc.log
+echo 'Kinetic-En.' | srun --mpi=pmix gmx_mpi energy -f md.edr -o ke.xvg -xvg none &>> post_proc.log
+
+end=$(date)
+
+rm cluster.xtc
+
+echo "$start" &>> post_proc.log
+echo "$end" &>> post_proc.log
+
+cp -rf $TMPDIR/$USER/$SLURM_JOBID/* $SLURM_SUBMIT_DIR/
+
+rm -rf $TMPDIR/$USER/$SLURM_JOBID
+exit
+

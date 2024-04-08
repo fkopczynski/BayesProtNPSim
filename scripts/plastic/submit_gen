@@ -1,0 +1,49 @@
+#!/bin/bash
+#SBATCH --job-name=gen # Job name
+#SBATCH --ntasks=1 # Number of MPI tasks (i.e. processes)
+#SBATCH --cpus-per-task=1 # Number of cores per MPI task
+#SBATCH --nodes=1 # Maximum number of nodes to be allocated
+#SBATCH --ntasks-per-node=20 # Maximum number of tasks on each node
+#SBATCH --output=gen_%j.log # Path to the standard output and error files relative to the working directory
+#SBATCH --partition=Ensing-ib # request a specific partition
+
+pwd; hostname; date
+echo "===="
+echo "   Memory/node:$SLURM_MEM_PER_NODE"
+echo "===="
+
+source /home/spack-user/spack/share/spack/setup-env.sh
+spack load gromacs/z7lm
+
+echo "SLURM_JOBID=$SLURM_JOBID"
+echo "SLURM_JOB_NODELIST=$SLURM_JOB_NODELIST"
+echo "SLURM_NNODES=$SLURM_NNODES "
+echo "working directory= $SLURM_SUBMIT_DIR "
+echo "tmp directory=$TMPDIR"
+echo "NPROCS=$SLURM_NPROCS"
+echo "Number of CPUs per task=$SLURM_CPUS_PER_TASK"
+echo "Count of processors avaiable to the job on this node=$SLURM_JOB_CPUS_PER_NODE"
+echo "Number of CPUs requested per allocated GPU=$SLURM_CPUS_PER_GPU"
+echo "Number of GPUs requested=$SLURM_GPUS"
+echo "Number of tasks=$SLURM_NTASKS"
+
+# no coredumps
+ulimit -S -c 0
+ulimit -s unlimited
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+export TMPDIR=/state/partition1
+
+mkdir -p $TMPDIR/$USER/$SLURM_JOBID
+cp -rf $SLURM_SUBMIT_DIR/* $TMPDIR/$USER/$SLURM_JOBID
+cd $TMPDIR/$USER/$SLURM_JOBID
+
+./gen.sh -p ps -l $1
+
+cp -rf $TMPDIR/$USER/$SLURM_JOBID/* $SLURM_SUBMIT_DIR/
+
+rm -rf $TMPDIR/$USER/$SLURM_JOBID
+exit
+
+
+
