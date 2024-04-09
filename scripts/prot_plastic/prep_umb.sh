@@ -14,7 +14,7 @@ cp ../75ns.tpr .
 cp ../md.cpt .
 cp ~/project/plumed_files/$i/plumed.dat . 
 cp ~/project/plumed_files/*gpu_umbrella .
-cp ~/proejct/plumed_files/simulate_plumed.sh .
+cp ~/project/plumed_files/simulate_plumed.sh .
 sed -i "2s/.*/#SBATCH --job-name=u${i}/" 16gpu_umbrella
 sed -i "2s/.*/#SBATCH --job-name=u${i}/" 20gpu_umbrella
 sed -i "2s/.*/#SBATCH --job-name=u${i}/" 24gpu_umbrella
