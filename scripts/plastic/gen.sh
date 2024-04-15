@@ -26,7 +26,7 @@ echo ${plast}
 if [ -z $plast ] || [ $len -eq 0 ]; then
 echo "Arguments -p and -l must be given"
 exit 1
-elif [[ $plast != "ps" && $plast != "idk" && $plast != "pm"]]; then 
+elif [ $plast != "ps" && $plast != "idk" && $plast != "pm"]; then 
 echo "Please choose -p between ps, ?, pm"
 exit 1
 fi
@@ -112,7 +112,6 @@ tleap -s -f tleap.in > tleap.out
 
 acpype -p poly.top -x poly.crd -b ${struct1}${len}
 mv ${struct1}${len}.amb2gmx ${struct1}${len}
-cp plastic_prep.sh ${struct1}${len}/.
 
 # deactivate python environment
 conda deactivate
@@ -125,17 +124,22 @@ mv * plastic/
 mkdir prot_pl
 cd prot_pl
 mkdir md
-mkdir md/umbrella
+mkdir md/plumed
 
 # put all other required files here
-#ADD ALSO SOME ANALYSIS SCRIPTS!!!
+# set up systems for the next steps
 cp ~/project/protein/* .
+cp ~/project/scripts/prot_pl/put_together.py .
+cp ~/project/scripts/prot_pl/prep_prot_pl.sh .
+cp ~/project/scripts/prot_pl/prep_umb.sh plumed/.
+cp ~/project/scripts/prot_pl/get_force.py plumed/.
+
 cd ../plastic/
 cp ~/project/mdps/plastic/* .
 cp ~/project/scripts/plastic/* .
 cp -r ~/project/charmm27.ff .
 mkdir md
-mv md.mdp *gpu_submit md/.
+mv simulate_plastic.sh md.mdp *gpu_submit md/.
 
 # create the topol.top file
 acp_top=*GMX.top
