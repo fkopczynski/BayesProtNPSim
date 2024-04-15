@@ -182,5 +182,5 @@ gmx grompp -f md.mdp -c ../posre.gro -p ../topol.top -o md.tpr &>> prep.log
 
 # for generating a consistent job name
 sed -i "2s/.*/#SBATCH --job-name=${norm1}${len}eq/" *gpu_submit
-#sbatch 32gpu_submit
+sbatch 32gpu_submit
 

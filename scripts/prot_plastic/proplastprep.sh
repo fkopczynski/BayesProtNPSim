@@ -67,4 +67,4 @@ sed -i "2s/.*/#SBATCH --job-name=${plast}${len}prot/" 16gpu_submit
 sed -i "2s/.*/#SBATCH --job-name=${plast}${len}prot/" 20gpu_submit
 sed -i "2s/.*/#SBATCH --job-name=${plast}${len}prot/" 24gpu_submit
 sed -i "2s/.*/#SBATCH --job-name=${plast}${len}prot/" 32gpu_submit
-#sbatch 16gpu_submit
+sbatch 16gpu_submit
