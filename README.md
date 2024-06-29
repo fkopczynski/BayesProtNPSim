@@ -1,5 +1,6 @@
 # MScProject
 All scripts used in the MSc project can be found here.
+
 charmm27.ff: the modified force field
 mdps: .mdp files used for simulations
 notebooks: Jupyter notebooks used for analysis
