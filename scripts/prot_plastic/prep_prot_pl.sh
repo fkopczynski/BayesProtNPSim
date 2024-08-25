@@ -12,7 +12,7 @@
 
 # path to the cloned repo
 # change according to your placement of the folder!
-proj_path="$HOME/project/"
+proj_path="$HOME/project"
 
 # set up gromacs executable
 gmx_mpi="/home/spack-user/spack/opt/spack/linux-centos7-zen3/aocc-3.1.0/gromacs-2020.4-z7lmmyeup2uhxfy2mr3bwi2dt6k4grzy/bin/gmx_mpi"
