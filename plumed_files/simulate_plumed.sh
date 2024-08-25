@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Script to run in case where optimiser is not used and instead individual free-energy profiles for a specified plastic chain lencth are determined
+
 # run the simulation
 srun --mpi=pmix gmx_mpi mdrun -s 75ns.tpr -cpi md.cpt -plumed plumed.dat -noappend -ntomp $SLURM_CPUS_PER_TASK >& md.out
 
