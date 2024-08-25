@@ -28,7 +28,7 @@ gmx_mpi="/home/spack-user/spack/opt/spack/linux-centos7-zen3/aocc-3.1.0/gromacs-
 # prepare the tpr file, extending the simulation by 50 ns
 srun --mpi=pmix $gmx_mpi convert-tpr -s md.tpr -extend 50000 -o 50ns.tpr
 
-# loop over umbrellas and prepare each system
+# prepare the results folder, copy required files
 mkdir $1
 cd $1
 cp ../50ns.tpr .
