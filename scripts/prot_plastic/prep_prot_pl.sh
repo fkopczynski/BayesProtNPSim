@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Script that prepares and runs protein equilibration with the plastic.
+# Runs in the optimiser, can also be used for manual simulations (as an alternative to simulate.sh)
 # Remember to change the path to your cloned repo!
 # Parameters:
 # -p: plastic name, e.g. ps [REQUIRED]
