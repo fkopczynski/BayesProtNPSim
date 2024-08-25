@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Script to run for manual calculations without the optimiser (e.g. when full free-energy profiles are determined for a plastic length)
+# Yields the trajectory and parameters helpful to analyse the simulation, exported as .xvg files
+# Also gives a post_proc.log file where any potential errors are gathered
+
 # run the simulation
 srun --mpi=pmix gmx_mpi mdrun -deffnm md >& md.out
 
