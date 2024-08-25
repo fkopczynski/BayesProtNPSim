@@ -10,7 +10,7 @@
 # -d: distance between the molecule and the edge of the box, 1.5 nm by default
 # -c: concentration of NaCl, by default 150 mM
 # -r: molecules which are replaced with ions during GROMACS pre-processing, by default SOL
-# the output of GROMACS operations is a prep.log file which contains the outputs and potential error messages of GROMACS commands
+# this sctipt generated a prep.log file which contains the outputs and potential error messages of GROMACS commands
 
 # path to the cloned repo
 # change according to your placement of the folder!
