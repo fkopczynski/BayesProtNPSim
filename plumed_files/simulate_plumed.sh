@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Script to run when full free-energy profiles are determined for a plastic length, instead of points given by the optimiser 
+# Script to run for manual calculations without the optimiser (e.g. when full free-energy profiles are determined for a plastic length), assumes that the simulation will run for 75 ns and that the appropriate .tpr file with the simulation extension has been generated and names 75ns.tpr
+# Yields the trajectory without PBC
+# Also gives a post_proc.log file where any potential errors are gathered
 
 # run the simulation
 srun --mpi=pmix gmx_mpi mdrun -s 75ns.tpr -cpi md.cpt -plumed plumed.dat -noappend -ntomp $SLURM_CPUS_PER_TASK >& md.out
