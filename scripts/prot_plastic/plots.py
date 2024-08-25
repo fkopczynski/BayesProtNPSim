@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 
+# This script generates the following plots to check if the simulation ran well:
+# - potential energy
+# - kinetic energy
+# - temperature
+# - pressure
+# - RMSD of protein C_alpha
+# - RMSD of plastic atoms
+# - radius of gyration of the protein
+# - COM separation of the protein
+# The plot is saved as param_check.png file.
+# Adjust the times below (t, t2 parameter), depending on your simulation settings.
+
 # libraries
 import matplotlib.pyplot as plt
 import numpy as np
 import mdtraj as md
 
 # time definition, second one for RMSD, gyr and COM because based on xtc
+# please adjust according to your simulation settings
 t = np.arange(0, 200002, 2)
 t2 = np.arange(0, 200002, 500)
 
