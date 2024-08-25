@@ -1,11 +1,27 @@
 #!/bin/bash
 
+# Script that prepares and runs protein equilibration with the plastic.
+# Remember to change the path to your cloned repo!
+# Parameters:
+# -p: plastic name, e.g. ps [REQUIRED]
+# -l: plastic length [REQUIRED]
+# -d: distance between the molecule and the edge of the box, 1.5 nm by default
+# -c: concentration of NaCl, by default 150 mM
+# -r: molecules which are replaced with ions during GROMACS pre-processing, by default SOL
+# this sctipt generated a prep.log file which contains the outputs and potential error messages of GROMACS commands
+
+# path to the cloned repo
+# change according to your placement of the folder!
+proj_path="$HOME/project/"
+
+# set up gromacs executable
+gmx_mpi="/home/spack-user/spack/opt/spack/linux-centos7-zen3/aocc-3.1.0/gromacs-2020.4-z7lmmyeup2uhxfy2mr3bwi2dt6k4grzy/bin/gmx_mpi"
+
 # some defaults
 ion_conc=0.15
 ion_repl='SOL'
 plast=""
 len=0
-
 
 # get script parameters
 while getopts "p:l:c:r:" opt; do
@@ -27,41 +43,39 @@ exit 1
 fi
 
 # set up the structure
-cp ~/project/mdps/prot_plastic/* .
-cp ~/project/scripts/prot_plastic/*gpu_submit md/.
-cp ~/project/scripts/prot_plastic/simulate.sh md/. 
+cp $proj_path/mdps/prot_plastic/* .
 
 # Copy a correct set of input files and the modified forcefield
-cp ~/results/plastic/${plast}/${plast}${len}/plastic/plastic.itp .
-cp -r ~/project/charmm27.ff .
+cp ../plastic/plastic.itp .
+cp -r $proj_path/charmm27.ff .
 
 # change the topol.top file so that the plastic molecule is added
 # the plastic needs to be added to the [molecules] section to the last line
 echo "$plast$len	1" >> topol.top
 
 # put in a box, solvate
-gmx editconf -f conf.pdb -bt cubic -d 2.0 -o box.gro &> prep.log
-gmx solvate -cs -cp box.gro -p topol.top -o solve.gro &>> prep.log
+srun --mpi=pmix $gmx_mpi editconf -f conf.pdb -bt cubic -d 2.0 -o box.gro &> prep.log
+srun --mpi=pmix $gmx_mpi solvate -cs -cp box.gro -p topol.top -o solve.gro &>> prep.log
 
 # energy minimisation (emw)
-gmx grompp -f emw.mdp -c solve.gro -p topol.top -o emw.tpr -maxwarn 4 &>> prep.log
-mpirun -np $SLURM_NTASKS gmx_mpi mdrun -deffnm emw -ntomp $SLURM_CPUS_PER_TASK >& emw.out
+srun --mpi=pmix $gmx_mpi grompp -f emw.mdp -c solve.gro -p topol.top -o emw.tpr -maxwarn 4 &>> prep.log
+srun --mpi=pmix $gmx_mpi mdrun -deffnm emw >& emw.out
  
 # add ions
-gmx grompp -f emw.mdp -c emw.gro -p topol.top -o ion.tpr -maxwarn 3 &>> prep.log
-echo $ion_repl  | gmx genion -s ion.tpr -p topol.top -neutral -conc $ion_conc -o ion.gro &>> prep.log
+srun --mpi=pmix $gmx_mpi grompp -f emw.mdp -c emw.gro -p topol.top -o ion.tpr -maxwarn 3 &>> prep.log
+echo $ion_repl  | srun --mpi=pmix $gmx_mpi genion -s ion.tpr -p topol.top -neutral -conc $ion_conc -o ion.gro &>> prep.log
 
 # em with ions
-gmx grompp -f em.mdp -c ion.gro -p topol.top -o em.tpr -maxwarn 2 &>> prep.log
-mpirun -np $SLURM_NTASKS gmx_mpi mdrun -deffnm em -ntomp $SLURM_CPUS_PER_TASK >& em.out
+srun --mpi=pmix $gmx_mpi grompp -f em.mdp -c ion.gro -p topol.top -o em.tpr -maxwarn 2 &>> prep.log
+srun --mpi=pmix $gmx_mpi mdrun -deffnm em >& em.out
 
 # water equilibration (position restraint run)
-gmx grompp -f posre.mdp -c em.gro -r em.gro -p topol.top -o posre.tpr -maxwarn 5 &>> prep.log
-mpirun -np $SLURM_NTASKS gmx_mpi mdrun -deffnm posre -ntomp $SLURM_CPUS_PER_TASK >& posre.out
+srun --mpi=pmix $gmx_mpi grompp -f posre.mdp -c em.gro -r em.gro -p topol.top -o posre.tpr -maxwarn 5 &>> prep.log
+srun --mpi=pmix $gmx_mpi mdrun -deffnm posre >& posre.out
 
-# final equilibration
-gmx grompp -f md.mdp -c posre.gro -p topol.top -o md/md.tpr &>> prep.log
+# final posre
+srun --mpi=pmix $gmx_mpi grompp -f md.mdp -c posre.gro -p topol.top -o md/md.tpr &>> prep.log
 cd md
 
-sed -i "2s/.*/#SBATCH --job-name=${plast}${len}prot/" *gpu_submit
-sbatch 16gpu_submit
+# production run
+srun --mpi=pmix $gmx_mpi mdrun -deffnm md >& md.out
