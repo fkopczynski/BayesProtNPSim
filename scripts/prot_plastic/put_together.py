@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
+# This script puts the plastic and the protein together in an optimal non-overlapping position, applying translations and random rotations of the plastic.
+
 # import all the libraries
 import mdtraj as md
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 
-# define translation function 
 def move_plastic(prot_struct="protein.pdb", pl_struct="plastic.pdb", output="moved_plastic.pdb", length=3):
 
     ''' 
-    Translates plastic so that it is positioned near the protein and the binding spot within a specified distance from the protein. 
-    The first two inputs are the names of the protein and plastic coordinate files (.pdb / .gro), respectively. 
-    Length parameter is the distance (in nm) from the geometric centres of proteins.
+    Translates the plastic so that it is positioned near the protein and the binding spot within a specified distance from the protein. 
+    - prot_struct, pl_struct: names of the protein and plastic coordinate files (allowed format: .pdb / .gro), respectively. They must be placed in the same directory.
+    - output: the name of the moved output structure (.pdb).
+    - length: distance (in nm) from the geometric centres of proteins.
     '''
     
     # load the structures
@@ -42,7 +43,7 @@ def move_plastic(prot_struct="protein.pdb", pl_struct="plastic.pdb", output="mov
     # define the coordinates of the new center of geometry of the plastic 
     new_center = centerB + perp_scaled
 
-    #calculate by how much does the plastic center of geometry need to move to get to the new one defined by the cross product
+    # calculate by how much the plastic center of geometry needs to move to get to the new one defined by the cross product
     move_vec = new_center - center_plastic
 
     # move plastic
@@ -51,10 +52,9 @@ def move_plastic(prot_struct="protein.pdb", pl_struct="plastic.pdb", output="mov
 
     return perp, perp_scaled, move_vec
 
-# define rotation function
 def rotate_plastic(pl_struct="moved_plastic.pdb", axis="x", angle=90, output="rotated.pdb"):
     '''
-    This function rotates the given molecule along a specified axis (x, y, z) by a specified angle in degrees.
+    Rotates the plastic along a specified axis (x, y, z) by a specified angle in degrees.
     '''
     # load everything
     plastic = md.load(pl_struct)
@@ -72,7 +72,7 @@ def rotate_plastic(pl_struct="moved_plastic.pdb", axis="x", angle=90, output="ro
     elif axis == "z":
         rot_mat = np.array([[np.cos(angle_rad), -np.sin(angle_rad), 0], [np.sin(angle_rad), np.cos(angle_rad), 0], [0, 0, 1]])
     else:
-        print("Wrong axis specified: x, y or z [str format]")
+        print("Wrong axis specified: x, y or z.")
         exit(1)
 
     # iterate over all coordinates and multiply them by an appropriate rotation matrix
@@ -83,12 +83,10 @@ def rotate_plastic(pl_struct="moved_plastic.pdb", axis="x", angle=90, output="ro
     # replace the coordinates with the rotated ones and move the geometrical centre to the same point as before
     plastic.xyz = rot_coord
     plastic.xyz += center_plastic
-
     plastic.save_pdb(output)
 
-# define the function generating a combined pdb
 def combine_pdbs(prot="protein.pdb", plast="rot_xyz.pdb", out="conf.pdb"):
-    '''Combines the protein and plastic pdbs. Puts the protein pdb first, then the plastic.'''
+    '''Combines the protein and plastic pdbs. Puts the protein coordinates first in the output pdb, then the plastic.'''
     
     with open(prot) as protein:
         lines_protein = protein.readlines()
@@ -108,7 +106,6 @@ def combine_pdbs(prot="protein.pdb", plast="rot_xyz.pdb", out="conf.pdb"):
     plastic.close()
     new_pdb.close()
         
-# define the function checking if the combined structures overlap
 def check_overlap(struct="conf.pdb", cutoff_d=0.5):
     '''
     This function checks if the structures overlap, it helps to arrange the molecules in an iterative way. If molecules overlap, returns True; otherwise False.
@@ -131,6 +128,7 @@ def check_overlap(struct="conf.pdb", cutoff_d=0.5):
 # copy the plastic pdb from the equilibration
 os.system('cp ../plastic/md/plastic.pdb .')
 
+# iterate through different distances of the plastic geometrical centre and COM of the protein, starting from 2.5 nm and slowly increasing by 0.001 nm
 length = 2.5
 while True:
     move_plastic(length=length)
