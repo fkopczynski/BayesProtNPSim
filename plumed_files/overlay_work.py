@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-# this script generates overlayed work plot for each umbrella
+# This script generates overlayed work and bias plot for each umbrella
+# Useful in cases where full free-energy profiles are determined (not relevant for optimiser-determined points)
 
-import mdtraj as md
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -10,16 +10,18 @@ import os
 os.chdir('./umbrella')
 
 pl, axs = plt.subplots(1,1, figsize=(12,12))
-#axs = ax.flatten()
 
+# get the CV folders 
 folders = os.listdir()
 lst = sorted(folders, reverse=True)
-print(type(folders))
 
+# iterate through different points on the CV, extracting forces and work from COLVAR with respect to time
 for i,folder in enumerate(lst):
     
     os.chdir(os.getcwd()+'/'+folder)
     print(os.getcwd())
+
+    # if there is no COLVAR file, skip
     if 'COLVAR' not in os.listdir():
         os.chdir('../')
         continue
@@ -28,13 +30,19 @@ for i,folder in enumerate(lst):
 
     axs.set_title(folder)
     axs.set_xlabel('t / ps')
+
+    # open COLVAR
     with open(path, 'r') as f:
         lines = f.readlines()[1:]
         t = np.zeros(len(lines))
         cv = np.zeros(len(lines))
+
+        # initiate the arrays
         steer_cntr = np.zeros(len(lines))
         steer_bias = np.zeros(len(lines))
         steer_work = np.zeros(len(lines))
+
+        # get the values for each line in COLVAR
         for j,line in enumerate(lines):
             values = line.strip().split()
             t[j] = float(values[0])
@@ -42,17 +50,14 @@ for i,folder in enumerate(lst):
             steer_cntr[j] = float(values[4])
             steer_bias[j] = float(values[2])
             steer_work[j] = float(values[5])
+
+        # plot the time evolution of the parameters
         axs.set_ylabel('COM separation / nm')
         axs.plot(t,cv, label=cv)
         axs.plot(t,steer_cntr, label=folder)
-        #axs[3*i+1].set_ylabel('steer_bias')
-        #axs[3*i+1].plot(t,steer_bias, label=steer_bias)
-        #axs[3*i+2].set_ylabel('steer.d1_work / kcal')
-        #axs[3*i+2].plot(t,steer_work, label=steer_work)
 
         os.chdir('../')
-#pl.legend()
-pl.show()
+
 pl.savefig('umb_bias.png')
 
 
