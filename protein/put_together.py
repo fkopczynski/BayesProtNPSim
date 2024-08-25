@@ -5,7 +5,6 @@
 # import all the libraries
 import mdtraj as md
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 
 def move_plastic(prot_struct="protein.pdb", pl_struct="plastic.pdb", output="moved_plastic.pdb", length=3):
