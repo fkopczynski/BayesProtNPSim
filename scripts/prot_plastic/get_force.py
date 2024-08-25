@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
+# This script extracts the average force and standard deviation from an umbrella sampling simulation. By default, it starts collecting forces for block analysis at 35 ns and ends at 50 ns. Block size is by default 1 ns.
+# Important! This script requires a positional argument, which is the sampled COM separation (and the results folder) name. This is taken care of by the optimiser but if executed manually, this needs to be adjusted. 
+
 import numpy as np
 import os
+import sys
 
-def extract_force(umb, start=35000, end=75000, size=2000):
+def extract_force(umb, start=35000, end=50000, size=1000):
     '''
     Calculates the forces for a simulated system. Requirements:
     - folders in which the results are located must be called the same as the CV value at the umbrella, e.g. 2.1: that defines the umbrellas; these folders must contain COLVAR files from PLUMED
-    - time resolutino in COLVAR file must be 1 ps for indexing
+    - time resolutino in COLVAR file must be 1 ps so that indexing works properly
     '''
     
     # define the bins / blocks from input parameters, as well as the umbrella centers
@@ -21,7 +25,6 @@ def extract_force(umb, start=35000, end=75000, size=2000):
 
     # open COLVAR file in the umbrella folder
     # extract info about relevant parameters from COLVAR
-    os.chdir(str(umb))
 
     with open('COLVAR') as f:
         lines = f.readlines()[1:]
@@ -50,12 +53,13 @@ def extract_force(umb, start=35000, end=75000, size=2000):
             binned_forces[i] = f_bin
         
     os.chdir('../')
-    print(binned_forces)
+    #print(binned_forces)
     # averaged free energy profile
     final_force = np.average(binned_forces)
+    final_std = np.std(binned_forces)
+    return final_force, final_std
 
-    return final_force
-
-os.chdir('/home/fkopczynski/results/plastic/ps20/prot_pl/plumed')
-umb = 4.1
-f = extract_force(umb=umb)
+umb = sys.argv[1]
+force, std = extract_force(umb=umb)
+print(force)
+print(std)
