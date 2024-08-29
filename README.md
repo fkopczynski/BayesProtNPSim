@@ -32,6 +32,7 @@ Usage:
 - scripts/prot_plastic/prep_umb.sh
 
 2a. If you would like to use the automatic procedure of finding and evaluating new points using the Bayesian optimiser, copy the scripts/optimize.py script in your main result folder. Please make sure that the initial files needed for your polymer are there (see: scripts/plastic/example_inputs_ps). 
+
 2b. You can also carry out simulations manually with pre-defined COM separation values, which can for example produce simple free-energy profiles for a given plastic length. For this, execute the following scripts in order:
 - scripts/plastic/gen.sh
 - scripts/prot_plastic/put_together.py
