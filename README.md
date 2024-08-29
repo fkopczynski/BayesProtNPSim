@@ -31,4 +31,5 @@ Usage:
 - notebooks/get_force.ipynb to get the force profile and values for the optimiser / Bayesian quadrature
 
 3. To get a 3D dependence of both COM separation, as well as the plastic length on the free-energy using Bayesian quadrature, follow quadrature.ipynb.
+   
 Good luck!:)
