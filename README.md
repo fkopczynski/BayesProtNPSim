@@ -14,6 +14,16 @@ protein: structure and topology of cadherin EC1
 
 scripts: sub-divided into plastic and protein, used for system equilibration and putting plastic together with the protein
 
+Required python packages:
+- numpy
+- matplotlib
+- scikit-optimize
+- mdtraj
+- acpype
+- ambertools
+- emukit
+- scienceplots (optional, used in some notebooks)
+
 Usage:
 1. Change the proj_path variable in the following scripts in your cloned repo, according to the actual path:
 - scripts/optimize.py
