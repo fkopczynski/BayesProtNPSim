@@ -1,6 +1,6 @@
 # BayesProtNPSim
 
-All scripts used in the MSc project can be found here.
+Scripts used in the publication work can be found here.
 - charmm27.ff: the modified force field
 - mdps: .mdp files with simulation settings
 - notebooks: Jupyter notebooks used for umbrella integration, force extraction and Bayesian quadrature
